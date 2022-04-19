@@ -418,7 +418,7 @@ class Server extends AbstractTus
         $file = $this->buildFile([
             'name' => $fileName,
             'offset' => 0,
-            'size' => $this->getRequest()->header('Upload-Length'),
+            'size' => (int)$this->getRequest()->header('Upload-Length'),
             'file_path' => $filePath,
             'location' => $location,
         ])->setKey($uploadKey)->setChecksum($checksum)->setUploadMetadata($this->getRequest()->extractAllMeta());
