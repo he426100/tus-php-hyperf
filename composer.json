@@ -1,6 +1,6 @@
 {
     "name": "he426100/tus-php-hyperf",
-    "description": "the Hyperf Tus-php package.",
+    "description": "The Hyperf Tus-php package.",
     "type": "library",
     "license": "MIT",
     "authors": [
