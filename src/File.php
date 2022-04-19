@@ -1,11 +1,19 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of he426100/tus-php-hyperf.
+ *
+ * @link     https://github.com/he426100/tus-php-hyperf
+ * @contact  mrpzx001@gmail.com
+ * @license  https://github.com/he426100/tus-php-hyperf/blob/master/LICENSE
+ */
 namespace Tus;
 
 use Carbon\Carbon;
 use Tus\Cache\Cacheable;
-use Tus\Exception\FileException;
 use Tus\Exception\ConnectionException;
+use Tus\Exception\FileException;
 use Tus\Exception\OutOfRangeException;
 
 class File
@@ -48,29 +56,21 @@ class File
 
     /**
      * File constructor.
-     *
-     * @param string|null    $name
-     * @param Cacheable|null $cache
      */
     public function __construct(string $name = null, Cacheable $cache = null)
     {
-        $this->name  = $name;
+        $this->name = $name;
         $this->cache = $cache;
     }
 
     /**
      * Set file meta.
      *
-     * @param int         $offset
-     * @param int         $fileSize
-     * @param string      $filePath
-     * @param string|null $location
-     *
      * @return File
      */
     public function setMeta(int $offset, int $fileSize, string $filePath, string $location = null): self
     {
-        $this->offset   = $offset;
+        $this->offset = $offset;
         $this->fileSize = $fileSize;
         $this->filePath = $filePath;
         $this->location = $location;
@@ -80,8 +80,6 @@ class File
 
     /**
      * Set name.
-     *
-     * @param string $name
      *
      * @return File
      */
@@ -94,8 +92,6 @@ class File
 
     /**
      * Get name.
-     *
-     * @return string
      */
     public function getName(): string
     {
@@ -104,8 +100,6 @@ class File
 
     /**
      * Set file size.
-     *
-     * @param int $size
      *
      * @return File
      */
@@ -118,8 +112,6 @@ class File
 
     /**
      * Get file size.
-     *
-     * @return int
      */
     public function getFileSize(): int
     {
@@ -128,8 +120,6 @@ class File
 
     /**
      * Set key.
-     *
-     * @param string $key
      *
      * @return File
      */
@@ -142,8 +132,6 @@ class File
 
     /**
      * Get key.
-     *
-     * @return string
      */
     public function getKey(): string
     {
@@ -152,8 +140,6 @@ class File
 
     /**
      * Set checksum.
-     *
-     * @param string $checksum
      *
      * @return File
      */
@@ -166,8 +152,6 @@ class File
 
     /**
      * Get checksum.
-     *
-     * @return string
      */
     public function getChecksum(): string
     {
@@ -176,8 +160,6 @@ class File
 
     /**
      * Set offset.
-     *
-     * @param int $offset
      *
      * @return File
      */
@@ -190,8 +172,6 @@ class File
 
     /**
      * Get offset.
-     *
-     * @return int
      */
     public function getOffset(): int
     {
@@ -200,8 +180,6 @@ class File
 
     /**
      * Set location.
-     *
-     * @param string $location
      *
      * @return File
      */
@@ -214,8 +192,6 @@ class File
 
     /**
      * Get location.
-     *
-     * @return string
      */
     public function getLocation(): string
     {
@@ -224,8 +200,6 @@ class File
 
     /**
      * Set absolute file location.
-     *
-     * @param string $path
      *
      * @return File
      */
@@ -238,8 +212,6 @@ class File
 
     /**
      * Get absolute location.
-     *
-     * @return string
      */
     public function getFilePath(): string
     {
@@ -260,8 +232,6 @@ class File
 
     /**
      * Get file meta.
-     *
-     * @return array
      */
     public function details(): array
     {
@@ -284,12 +254,8 @@ class File
      * Upload file to server.
      *
      * @param $file
-     * 
-     * @param int $totalBytes
      *
      * @throws ConnectionException
-     *
-     * @return int
      */
     public function upload($file, int $totalBytes): int
     {
@@ -298,12 +264,12 @@ class File
         }
 
         $output = $this->open($this->getFilePath(), self::APPEND_BINARY);
-        $key    = $this->getKey();
+        $key = $this->getKey();
 
         try {
             $this->seek($output, $this->offset);
 
-            if (CONNECTION_NORMAL !== connection_status()) {
+            if (connection_status() !== CONNECTION_NORMAL) {
                 throw new ConnectionException('Connection aborted by user.');
             }
             $bytes = $this->write($output, $file);
@@ -325,9 +291,6 @@ class File
     /**
      * Open file in given mode.
      *
-     * @param string $filePath
-     * @param string $mode
-     *
      * @throws FileException
      *
      * @return resource
@@ -337,8 +300,8 @@ class File
         $this->exists($filePath, $mode);
         $ptr = @fopen($filePath, $mode);
 
-        if (false === $ptr) {
-            throw new FileException("Unable to open $filePath.");
+        if ($ptr === false) {
+            throw new FileException("Unable to open {$filePath}.");
         }
         return $ptr;
     }
@@ -346,16 +309,11 @@ class File
     /**
      * Check if file to read exists.
      *
-     * @param string $filePath
-     * @param string $mode
-     *
      * @throws FileException
-     *
-     * @return bool
      */
     public function exists(string $filePath, string $mode = self::READ_BINARY): bool
     {
-        if (self::READ_BINARY === $mode && ! file_exists($filePath)) {
+        if ($mode === self::READ_BINARY && ! file_exists($filePath)) {
             throw new FileException('File not found.');
         }
 
@@ -366,18 +324,14 @@ class File
      * Move file pointer to given offset.
      *
      * @param resource $handle
-     * @param int      $offset
-     * @param int      $whence
      *
      * @throws FileException
-     *
-     * @return int
      */
     public function seek($handle, int $offset, int $whence = SEEK_SET): int
     {
         $position = fseek($handle, $offset, $whence);
 
-        if (-1 === $position) {
+        if ($position === -1) {
             throw new FileException('Cannot move pointer to desired position.');
         }
 
@@ -388,17 +342,14 @@ class File
      * Read data from file.
      *
      * @param resource $handle
-     * @param int      $chunkSize
      *
      * @throws FileException
-     *
-     * @return string
      */
     public function read($handle, int $chunkSize): string
     {
         $data = fread($handle, $chunkSize);
 
-        if (false === $data) {
+        if ($data === false) {
             throw new FileException('Cannot read file.');
         }
 
@@ -409,18 +360,15 @@ class File
      * Write data to file.
      *
      * @param resource $handle
-     * @param string   $data
-     * @param int|null $length
+     * @param null|int $length
      *
      * @throws FileException
-     *
-     * @return int
      */
     public function write($handle, string $data, $length = null): int
     {
         $bytesWritten = \is_int($length) ? fwrite($handle, $data, $length) : fwrite($handle, $data);
 
-        if (false === $bytesWritten) {
+        if ($bytesWritten === false) {
             throw new FileException('Cannot write to a file.');
         }
 
@@ -430,25 +378,23 @@ class File
     /**
      * Merge 2 or more files.
      *
-     * @param array $files File data with meta info.
-     *
-     * @return int
+     * @param array $files file data with meta info
      */
     public function merge(array $files): int
     {
         $destination = $this->getFilePath();
-        $firstFile   = array_shift($files);
+        $firstFile = array_shift($files);
 
         // First partial file can directly be copied.
         $this->copy($firstFile['file_path'], $destination);
 
-        $this->offset   = $firstFile['offset'];
+        $this->offset = $firstFile['offset'];
         $this->fileSize = filesize($firstFile['file_path']);
 
         $handle = $this->open($destination, self::APPEND_BINARY);
 
         foreach ($files as $file) {
-            if ( ! file_exists($file['file_path'])) {
+            if (! file_exists($file['file_path'])) {
                 throw new FileException('File to be merged not found.');
             }
 
@@ -464,17 +410,12 @@ class File
 
     /**
      * Copy file from source to destination.
-     *
-     * @param string $source
-     * @param string $destination
-     *
-     * @return bool
      */
     public function copy(string $source, string $destination): bool
     {
         $status = @copy($source, $destination);
 
-        if (false === $status) {
+        if ($status === false) {
             throw new FileException(sprintf('Cannot copy source (%s) to destination (%s).', $source, $destination));
         }
 
@@ -483,11 +424,6 @@ class File
 
     /**
      * Delete file and/or folder.
-     *
-     * @param array $files
-     * @param bool  $folder
-     *
-     * @return bool
      */
     public function delete(array $files, bool $folder = false): bool
     {
@@ -502,10 +438,6 @@ class File
 
     /**
      * Delete multiple files.
-     *
-     * @param array $files
-     *
-     * @return bool
      */
     public function deleteFiles(array $files): bool
     {
@@ -528,8 +460,6 @@ class File
      * Close file.
      *
      * @param $handle
-     *
-     * @return bool
      */
     public function close($handle): bool
     {

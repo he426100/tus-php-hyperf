@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of he426100/tus-php-hyperf.
+ *
+ * @link     https://github.com/he426100/tus-php-hyperf
+ * @contact  mrpzx001@gmail.com
+ * @license  https://github.com/he426100/tus-php-hyperf/blob/master/LICENSE
+ */
 namespace Tus\Cache;
 
 use Carbon\Carbon;
@@ -22,8 +30,6 @@ class HyperfStore extends AbstractCache
 
     /**
      * Get cache.
-     *
-     * @return CacheInterface
      */
     public function getCache(): CacheInterface
     {
@@ -37,12 +43,12 @@ class HyperfStore extends AbstractCache
     {
         $prefix = $this->getPrefix();
 
-        if (false === strpos($key, $prefix)) {
+        if (strpos($key, $prefix) === false) {
             $key = $prefix . $key;
         }
 
         $contents = $this->cache->get($key);
-        if (null !== $contents) {
+        if ($contents !== null) {
             $contents = json_decode($contents, true);
         }
 
@@ -50,7 +56,7 @@ class HyperfStore extends AbstractCache
             return $contents;
         }
 
-        if ( ! $contents) {
+        if (! $contents) {
             return null;
         }
 
@@ -82,7 +88,7 @@ class HyperfStore extends AbstractCache
     {
         $prefix = $this->getPrefix();
 
-        if (false === strpos($key, $prefix)) {
+        if (strpos($key, $prefix) === false) {
             $key = $prefix . $key;
         }
 

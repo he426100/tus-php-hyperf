@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of he426100/tus-php-hyperf.
+ *
+ * @link     https://github.com/he426100/tus-php-hyperf
+ * @contact  mrpzx001@gmail.com
+ * @license  https://github.com/he426100/tus-php-hyperf/blob/master/LICENSE
+ */
 namespace Tus\Tus;
 
 abstract class AbstractTus
@@ -27,10 +35,6 @@ abstract class AbstractTus
 
     /**
      * Set API path.
-     *
-     * @param string $path
-     *
-     * @return self
      */
     public function setApiPath(string $path): self
     {
@@ -41,8 +45,6 @@ abstract class AbstractTus
 
     /**
      * Get API path.
-     *
-     * @return string
      */
     public function getApiPath(): string
     {

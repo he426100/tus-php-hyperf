@@ -1,14 +1,22 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of he426100/tus-php-hyperf.
+ *
+ * @link     https://github.com/he426100/tus-php-hyperf
+ * @contact  mrpzx001@gmail.com
+ * @license  https://github.com/he426100/tus-php-hyperf/blob/master/LICENSE
+ */
 namespace Tus\Commands;
 
-use Tus\Tus\Server as TusServer;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Utils\ApplicationContext;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Tus\Tus\Server as TusServer;
 
 class ExpirationCommand extends Command
 {
@@ -45,7 +53,7 @@ class ExpirationCommand extends Command
 
         $config = ApplicationContext::getContainer()->get(ConfigInterface::class);
         $options = $input->getOption('config');
-        if (!empty($options)) {
+        if (! empty($options)) {
             foreach ($options as $key => $value) {
                 $config->set($key, $value);
             }

@@ -12,9 +12,9 @@ namespace Tus;
 
 use Tus\Cache\Cacheable;
 use Tus\Cache\CacheFactory;
-use Tus\Middleware\TusMiddlewareInterface;
-use Tus\Middleware\Middleware;
 use Tus\Commands\ExpirationCommand;
+use Tus\Middleware\Middleware;
+use Tus\Middleware\TusMiddlewareInterface;
 use Tus\Tus\AbstractTus;
 use Tus\Tus\Server;
 

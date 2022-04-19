@@ -1,11 +1,19 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of he426100/tus-php-hyperf.
+ *
+ * @link     https://github.com/he426100/tus-php-hyperf
+ * @contact  mrpzx001@gmail.com
+ * @license  https://github.com/he426100/tus-php-hyperf/blob/master/LICENSE
+ */
 namespace Tus;
 
 use Hyperf\HttpServer\Response as HyperfResponse;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class Response
 {
@@ -25,10 +33,6 @@ class Response
 
     /**
      * Set create only.
-     *
-     * @param bool $state
-     *
-     * @return self
      */
     public function createOnly(bool $state): self
     {
@@ -39,8 +43,6 @@ class Response
 
     /**
      * Set headers.
-     *
-     * @param array $headers
      *
      * @return Response
      */
@@ -54,8 +56,6 @@ class Response
     /**
      * Replace headers.
      *
-     * @param array $headers
-     *
      * @return Response
      */
     public function replaceHeaders(array $headers): self
@@ -67,8 +67,6 @@ class Response
 
     /**
      * Get global headers.
-     *
-     * @return array
      */
     public function getHeaders(): array
     {
@@ -77,8 +75,6 @@ class Response
 
     /**
      * Get create only.
-     *
-     * @return bool
      */
     public function getCreateOnly(): bool
     {
@@ -88,11 +84,9 @@ class Response
     /**
      * Create and send a response.
      *
-     * @param mixed $content Response data.
-     * @param int   $status  Http status code.
-     * @param array $headers Headers.
-     *
-     * @return PsrResponseInterface
+     * @param mixed $content response data
+     * @param int $status http status code
+     * @param array $headers headers
      */
     public function send($content, int $status = HttpResponse::HTTP_OK, array $headers = []): PsrResponseInterface
     {
@@ -103,7 +97,7 @@ class Response
         } else {
             $response = $this->response->raw($content);
         }
-        
+
         foreach ($headers as $header => $value) {
             $response = $response->withHeader($header, $value);
         }
@@ -114,11 +108,7 @@ class Response
      * Create a new file download response.
      *
      * @param \SplFileInfo|string $file
-     * @param string|null         $name
-     * @param array               $headers
-     * @param string|null         $disposition
-     *
-     * @return PsrResponseInterface
+     * @param null|string $disposition
      */
     public function download(
         $file,

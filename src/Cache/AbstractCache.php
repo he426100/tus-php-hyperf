@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * This file is part of he426100/tus-php-hyperf.
+ *
+ * @link     https://github.com/he426100/tus-php-hyperf
+ * @contact  mrpzx001@gmail.com
+ * @license  https://github.com/he426100/tus-php-hyperf/blob/master/LICENSE
+ */
 namespace Tus\Cache;
 
 abstract class AbstractCache implements Cacheable
@@ -12,10 +20,6 @@ abstract class AbstractCache implements Cacheable
 
     /**
      * Set time to live.
-     *
-     * @param int $secs
-     *
-     * @return self
      */
     public function setTtl(int $secs): self
     {
@@ -34,10 +38,6 @@ abstract class AbstractCache implements Cacheable
 
     /**
      * Set cache prefix.
-     *
-     * @param string $prefix
-     *
-     * @return Cacheable
      */
     public function setPrefix(string $prefix): Cacheable
     {
@@ -48,8 +48,6 @@ abstract class AbstractCache implements Cacheable
 
     /**
      * Get cache prefix.
-     *
-     * @return string
      */
     public function getPrefix(): string
     {
@@ -58,10 +56,6 @@ abstract class AbstractCache implements Cacheable
 
     /**
      * Delete all keys.
-     *
-     * @param array $keys
-     *
-     * @return bool
      */
     public function deleteAll(array $keys): bool
     {
