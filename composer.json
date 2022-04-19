@@ -1,0 +1,51 @@
+{
+    "name": "he426100/tus-php-hyperf",
+    "description": "the Hyperf Tus-php package.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "he426100",
+            "email": "mrpzx001@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.3",
+        "ext-json": "*",
+        "ext-swoole": ">=4.5",
+        "hyperf/cache": "^2.2",
+        "hyperf/context": "^2.2",
+        "hyperf/di": "~2.2.0",
+        "hyperf/event": "^2.2",
+        "hyperf/http-server": "^2.2",
+        "hyperf/redis": "^2.2",
+        "hyperf/utils": "^2.2",
+        "nesbot/carbon": "^1.26.3 || ^2.0",
+        "ramsey/uuid": "^3.7 || ^4.0",
+        "symfony/console": "^5.0 || ^6.0",
+        "symfony/http-foundation": "^5.0.7 || ^6.0",
+        "symfony/mime": "^5.0.9 || ^6.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpstan/phpstan": "^0.12",
+        "swoole/ide-helper": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "Tus\\": "src/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "scripts": {
+        "analyse": "phpstan analyse --memory-limit 1024M -l 0 ./src",
+        "cs-fix": "php-cs-fixer fix $1"
+    },
+    "extra": {
+        "hyperf": {
+            "config": "Tus\\ConfigProvider"
+        }
+    }
+}
