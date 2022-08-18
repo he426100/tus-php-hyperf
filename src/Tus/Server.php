@@ -10,14 +10,11 @@ declare(strict_types=1);
  */
 namespace Tus\Tus;
 
+use Tus\File;
 use Carbon\Carbon;
-use Hyperf\Utils\Context;
-use Psr\EventDispatcher\EventDispatcherInterface;
-use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Tus\Request;
+use Tus\Response;
 use Ramsey\Uuid\Uuid;
-use Symfony\Component\HttpFoundation\Request as HttpRequest;
-use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Tus\Cache\Cacheable;
 use Tus\Cache\CacheFactory;
 use Tus\Event\UploadComplete;
@@ -27,10 +24,13 @@ use Tus\Event\UploadProgress;
 use Tus\Exception\ConnectionException;
 use Tus\Exception\FileException;
 use Tus\Exception\OutOfRangeException;
-use Tus\File;
 use Tus\Middleware\Middleware;
-use Tus\Request;
-use Tus\Response;
+use Hyperf\Utils\Context;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\HttpFoundation\Request as HttpRequest;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class Server extends AbstractTus
 {
@@ -111,21 +111,19 @@ class Server extends AbstractTus
     }
 
     /**
-     * No other methods are allowed.
-     *
-     * @return PsrResponseInterface
-     */
-    public function __call(string $method, array $params)
-    {
-        return $this->response->send(null, HttpResponse::HTTP_BAD_REQUEST);
-    }
-
-    /**
      * Get cache.
      */
     public function getCache(): Cacheable
     {
         return $this->cache;
+    }
+
+    /**
+     * get cache prefix.
+     */
+    public function getCachePrefix(): string
+    {
+        return 'tus:' . strtolower((new \ReflectionClass(static::class))->getShortName()) . ':';
     }
 
     /**
@@ -285,51 +283,15 @@ class Server extends AbstractTus
 
         $clientVersion = $this->getRequest()->header('Tus-Resumable');
 
-        if ($requestMethod !== HttpRequest::METHOD_OPTIONS && $clientVersion && $clientVersion !== self::TUS_PROTOCOL_VERSION) {
+        if (HttpRequest::METHOD_OPTIONS !== $requestMethod && $clientVersion && self::TUS_PROTOCOL_VERSION !== $clientVersion) {
             return $this->response->send(null, HttpResponse::HTTP_PRECONDITION_FAILED, [
                 'Tus-Version' => self::TUS_PROTOCOL_VERSION,
             ]);
         }
 
         $method = 'handle' . ucfirst(strtolower($requestMethod));
+
         return $this->{$method}();
-    }
-
-    /**
-     * Delete expired resources.
-     */
-    public function handleExpiration(): array
-    {
-        $deleted = [];
-        $cacheKeys = $this->cache->keys('*');
-
-        foreach ($cacheKeys as $key) {
-            $fileMeta = $this->cache->get($key, true);
-
-            if (! $this->isExpired($fileMeta)) {
-                continue;
-            }
-
-            if (! $this->cache->delete($key)) {
-                continue;
-            }
-
-            if (is_writable($fileMeta['file_path'])) {
-                unlink($fileMeta['file_path']);
-            }
-
-            $deleted[] = $fileMeta;
-        }
-
-        return $deleted;
-    }
-
-    /**
-     * get cache prefix.
-     */
-    public function getCachePrefix(): string
-    {
-        return 'tus:' . strtolower((new \ReflectionClass(static::class))->getShortName()) . ':';
     }
 
     /**
@@ -378,7 +340,7 @@ class Server extends AbstractTus
 
         $offset = $fileMeta['offset'] ?? false;
 
-        if ($offset === false) {
+        if (false === $offset) {
             return $this->response->send(null, HttpResponse::HTTP_GONE);
         }
         return $this->response->send(null, HttpResponse::HTTP_OK, $this->getHeadersForHeadRequest($fileMeta));
@@ -501,7 +463,7 @@ class Server extends AbstractTus
 
         $status = $this->verifyPatchRequest($meta);
 
-        if ($status !== HttpResponse::HTTP_OK) {
+        if (HttpResponse::HTTP_OK !== $status) {
             return $this->response->send(null, $status);
         }
 
@@ -537,9 +499,13 @@ class Server extends AbstractTus
             return $this->response->send(null, HttpResponse::HTTP_CONTINUE);
         }
 
+        if ( ! $meta = $this->cache->get($uploadKey)) {
+            return $this->response->send(null, HttpResponse::HTTP_GONE);
+        }
+
         return $this->response->send(null, HttpResponse::HTTP_NO_CONTENT, [
             'Content-Type' => self::HEADER_CONTENT_TYPE,
-            'Upload-Expires' => $this->cache->get($uploadKey)['expires_at'],
+            'Upload-Expires' => $meta['expires_at'],
             'Upload-Offset' => $offset,
         ]);
     }
@@ -549,7 +515,7 @@ class Server extends AbstractTus
      */
     protected function verifyPatchRequest(array $meta): int
     {
-        if ($meta['upload_type'] === self::UPLOAD_TYPE_FINAL) {
+        if (self::UPLOAD_TYPE_FINAL === $meta['upload_type']) {
             return HttpResponse::HTTP_FORBIDDEN;
         }
 
@@ -580,7 +546,7 @@ class Server extends AbstractTus
     protected function handleGet()
     {
         // We will treat '/files/<key>/get' as a download request.
-        if ($this->request->key() === 'get') {
+        if ('get' === $this->request->key()) {
             return $this->handleDownload();
         }
 
@@ -648,11 +614,11 @@ class Server extends AbstractTus
             'Cache-Control' => 'no-store',
         ];
 
-        if ($fileMeta['upload_type'] === self::UPLOAD_TYPE_FINAL && $fileMeta['size'] !== $fileMeta['offset']) {
+        if (self::UPLOAD_TYPE_FINAL === $fileMeta['upload_type'] && $fileMeta['size'] !== $fileMeta['offset']) {
             unset($headers['Upload-Offset']);
         }
 
-        if ($fileMeta['upload_type'] !== self::UPLOAD_TYPE_NORMAL) {
+        if (self::UPLOAD_TYPE_NORMAL !== $fileMeta['upload_type']) {
             $headers += ['Upload-Concat' => $fileMeta['upload_type']];
         }
 
@@ -682,7 +648,7 @@ class Server extends AbstractTus
 
         $algorithms = [];
         foreach ($supportedAlgorithms as $hashAlgo) {
-            if (strpos($hashAlgo, ',') !== false) {
+            if (false !== strpos($hashAlgo, ',')) {
                 $algorithms[] = "'{$hashAlgo}'";
             } else {
                 $algorithms[] = $hashAlgo;
@@ -709,7 +675,7 @@ class Server extends AbstractTus
 
         $checksum = base64_decode($checksum);
 
-        if ($checksum === false || ! \in_array($checksumAlgorithm, hash_algos(), true)) {
+        if (false === $checksum || ! \in_array($checksumAlgorithm, hash_algos(), true)) {
             return $this->response->send(null, HttpResponse::HTTP_BAD_REQUEST);
         }
 
@@ -769,6 +735,35 @@ class Server extends AbstractTus
     }
 
     /**
+     * Delete expired resources.
+     */
+    public function handleExpiration(): array
+    {
+        $deleted = [];
+        $cacheKeys = $this->cache->keys('*');
+
+        foreach ($cacheKeys as $key) {
+            $fileMeta = $this->cache->get($key, true);
+
+            if (! $this->isExpired($fileMeta)) {
+                continue;
+            }
+
+            if (! $this->cache->delete($key)) {
+                continue;
+            }
+
+            if (is_writable($fileMeta['file_path'])) {
+                unlink($fileMeta['file_path']);
+            }
+
+            $deleted[] = $fileMeta;
+        }
+
+        return $deleted;
+    }
+
+    /**
      * Verify max upload size.
      */
     protected function verifyUploadSize(): bool
@@ -793,5 +788,15 @@ class Server extends AbstractTus
         }
 
         return $checksum === $this->getServerChecksum($filePath);
+    }
+
+    /**
+     * No other methods are allowed.
+     *
+     * @return PsrResponseInterface
+     */
+    public function __call(string $method, array $params)
+    {
+        return $this->response->send(null, HttpResponse::HTTP_BAD_REQUEST);
     }
 }
