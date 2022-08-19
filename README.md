@@ -1,6 +1,6 @@
 # Hyperf 可恢复文件上传组件
 
-该组件移植了 Tus-php 组件（[Tus-php](https://github.com/ankitpokhrel/tus-php )）相对完整的功能特性，除了 TusPhp\Tus\Client。
+该组件移植了 Tus-php 组件（[Tus-php](https://github.com/ankitpokhrel/tus-php )）相对完整的功能特性。
 
 * Swoole无法获取 `php://input`，用 `Swoole\Http\Request->getContent()` 代替
 

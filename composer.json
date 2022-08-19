@@ -17,6 +17,7 @@
         "hyperf/context": "^2.2",
         "hyperf/di": "~2.2.0",
         "hyperf/event": "^2.2",
+        "hyperf/guzzle": "^2.2",
         "hyperf/http-server": "^2.2",
         "hyperf/redis": "^2.2",
         "hyperf/utils": "^2.2",
