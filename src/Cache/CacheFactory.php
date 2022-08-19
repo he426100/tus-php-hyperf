@@ -14,8 +14,12 @@ class CacheFactory
 {
     /**
      * Make cache.
+     *
+     * @param string $type
+     * 
+     * @return Cacheable
      */
-    public function make(): Cacheable
+    public function make(string $type = 'file'): Cacheable
     {
         return make(HyperfStore::class);
     }
