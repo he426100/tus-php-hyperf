@@ -10,6 +10,10 @@ declare(strict_types=1);
  */
 namespace Tus\Tus;
 
+use Tus\Cache\Cacheable;
+use Tus\Cache\CacheFactory;
+use Psr\EventDispatcher\EventDispatcherInterface;
+
 abstract class AbstractTus
 {
     /** @const string Tus protocol version. */
@@ -30,11 +34,55 @@ abstract class AbstractTus
     /** @const string Header Content Type */
     protected const HEADER_CONTENT_TYPE = 'application/offset+octet-stream';
 
+    /** @var Cacheable */
+    protected $cache;
+
     /** @var string */
     protected $apiPath = '/files';
 
+    /** @var EventDispatcherInterface */
+    protected $dispatcher;
+
+    /**
+     * Set cache.
+     *
+     * @param mixed $cache
+     *
+     * @throws \ReflectionException
+     *
+     * @return self
+     */
+    public function setCache($cache): self
+    {
+        if (\is_string($cache)) {
+            $this->cache = CacheFactory::make($cache);
+        } elseif ($cache instanceof Cacheable) {
+            $this->cache = $cache;
+        }
+
+        $prefix = 'tus:' . strtolower((new \ReflectionClass(static::class))->getShortName()) . ':';
+
+        $this->cache->setPrefix($prefix);
+
+        return $this;
+    }
+
+    /**
+     * Get cache.
+     * 
+     * @return Cacheable
+     */
+    public function getCache(): Cacheable
+    {
+        return $this->cache;
+    }
+
     /**
      * Set API path.
+     * 
+     * @param string $path
+     * 
+     * @return self
      */
     public function setApiPath(string $path): self
     {
@@ -45,9 +93,38 @@ abstract class AbstractTus
 
     /**
      * Get API path.
+     * 
+     * @return string
      */
     public function getApiPath(): string
     {
         return $this->apiPath;
+    }
+
+    /**
+     * Set and get event dispatcher.
+     * 
+     * @return EventDispatcherInterface
+     */
+    public function event(): EventDispatcherInterface
+    {
+        if ( ! $this->dispatcher) {
+            $this->dispatcher = make(EventDispatcherInterface::class);
+        }
+        return $this->dispatcher;
+    }
+
+    /**
+     * Set event dispatcher.
+     *
+     * @param EventDispatcherInterface $dispatcher
+     *
+     * @return self
+     */
+    public function setDispatcher(EventDispatcherInterface $dispatcher): self
+    {
+        $this->dispatcher = $dispatcher;
+
+        return $this;
     }
 }

@@ -16,7 +16,6 @@ use Tus\Request;
 use Tus\Response;
 use Ramsey\Uuid\Uuid;
 use Tus\Cache\Cacheable;
-use Tus\Cache\CacheFactory;
 use Tus\Event\UploadComplete;
 use Tus\Event\UploadCreated;
 use Tus\Event\UploadMerged;
@@ -26,7 +25,6 @@ use Tus\Exception\FileException;
 use Tus\Exception\OutOfRangeException;
 use Tus\Middleware\Middleware;
 use Hyperf\Utils\Context;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\HttpFoundation\Request as HttpRequest;
@@ -79,15 +77,9 @@ class Server extends AbstractTus
     /** @var Middleware */
     protected $middleware;
 
-    /** @var Cacheable */
-    protected $cache;
-
-    /** @var EventDispatcherInterface */
-    protected $dispatcher;
-
     /**
-     * @var int max upload size in bytes
-     *          Default 0, no restriction
+     * @var int Max upload size in bytes
+     *          Default 0, no restriction.
      */
     protected $maxUploadSize = 0;
 
@@ -98,45 +90,21 @@ class Server extends AbstractTus
      *
      * @throws \ReflectionException
      */
-    public function __construct(Request $request, Response $response, Middleware $middleware, EventDispatcherInterface $dispatcher, CacheFactory $cacheFactory)
+    public function __construct(Request $request, Response $response, Middleware $middleware, string $cacheAdapter = 'file')
     {
         $this->request = $request;
         $this->response = $response;
         $this->middleware = $middleware;
         $this->uploadDir = \dirname(__DIR__, 2) . '/' . 'uploads';
-        $this->cache = $cacheFactory->make();
-        $this->cache->setPrefix($this->getCachePrefix());
-
-        $this->dispatcher = $dispatcher;
-    }
-
-    /**
-     * Get cache.
-     */
-    public function getCache(): Cacheable
-    {
-        return $this->cache;
-    }
-
-    /**
-     * get cache prefix.
-     */
-    public function getCachePrefix(): string
-    {
-        return 'tus:' . strtolower((new \ReflectionClass(static::class))->getShortName()) . ':';
-    }
-
-    /**
-     * Set and get event dispatcher.
-     */
-    public function event(): EventDispatcherInterface
-    {
-        return $this->dispatcher;
+        
+        $this->setCache($cacheAdapter);
     }
 
     /**
      * Set upload dir.
      *
+     * @param string $path
+     * 
      * @return Server
      */
     public function setUploadDir(string $path): self
@@ -148,6 +116,8 @@ class Server extends AbstractTus
 
     /**
      * Get upload dir.
+     * 
+     * @return string
      */
     public function getUploadDir(): string
     {
@@ -156,6 +126,8 @@ class Server extends AbstractTus
 
     /**
      * Get request.
+     * 
+     * @return Request
      */
     public function getRequest(): Request
     {
@@ -163,7 +135,9 @@ class Server extends AbstractTus
     }
 
     /**
-     * Get request.
+     * Get response.
+     * 
+     * @return Response
      */
     public function getResponse(): Response
     {
@@ -172,6 +146,10 @@ class Server extends AbstractTus
 
     /**
      * Get file checksum.
+     * 
+     * @param string $filePath
+     * 
+     * @return string
      */
     public function getServerChecksum(string $filePath): string
     {
@@ -180,6 +158,8 @@ class Server extends AbstractTus
 
     /**
      * Get checksum algorithm.
+     * 
+     * @return string|null
      */
     public function getChecksumAlgorithm(): ?string
     {
@@ -197,6 +177,8 @@ class Server extends AbstractTus
     /**
      * Set upload key.
      *
+     * @param string $key
+     * 
      * @return Server
      */
     public function setUploadKey(string $key): self
@@ -209,7 +191,7 @@ class Server extends AbstractTus
     /**
      * Get upload key from header.
      *
-     * @return PsrResponseInterface|string
+     * @return string|PsrResponseInterface
      */
     public function getUploadKey()
     {
@@ -230,6 +212,10 @@ class Server extends AbstractTus
 
     /**
      * Set middleware.
+     * 
+     * @param Middleware $middleware
+     * 
+     * return self
      */
     public function setMiddleware(Middleware $middleware): self
     {
@@ -240,6 +226,8 @@ class Server extends AbstractTus
 
     /**
      * Get middleware.
+     * 
+     * @return Middleware
      */
     public function middleware(): Middleware
     {
@@ -249,6 +237,8 @@ class Server extends AbstractTus
     /**
      * Set max upload size in bytes.
      *
+     * @param int $uploadSize
+     * 
      * @return Server
      */
     public function setMaxUploadSize(int $uploadSize): self
@@ -260,6 +250,8 @@ class Server extends AbstractTus
 
     /**
      * Get max upload size.
+     * 
+     * @return int
      */
     public function getMaxUploadSize(): int
     {
@@ -296,6 +288,8 @@ class Server extends AbstractTus
 
     /**
      * Apply middleware.
+     * 
+     * @return void
      */
     protected function applyMiddleware()
     {
@@ -308,6 +302,8 @@ class Server extends AbstractTus
 
     /**
      * Handle OPTIONS request.
+     * 
+     * @return PsrResponseInterface
      */
     protected function handleOptions(): PsrResponseInterface
     {
@@ -329,6 +325,8 @@ class Server extends AbstractTus
 
     /**
      * Handle HEAD request.
+     * 
+     * @return PsrResponseInterface
      */
     protected function handleHead(): PsrResponseInterface
     {
@@ -348,6 +346,8 @@ class Server extends AbstractTus
 
     /**
      * Handle POST request.
+     * 
+     * @return PsrResponseInterface
      */
     protected function handlePost(): PsrResponseInterface
     {
@@ -392,7 +392,7 @@ class Server extends AbstractTus
             'Upload-Expires' => $this->cache->get($uploadKey)['expires_at'],
         ];
 
-        $this->dispatcher->dispatch(
+        $this->event()->dispatch(
             new UploadCreated($file, $this->getRequest(), $this->getResponse()->setHeaders($headers)),
             UploadCreated::NAME
         );
@@ -402,6 +402,11 @@ class Server extends AbstractTus
 
     /**
      * Handle file concatenation.
+     * 
+     * @param string $fileName
+     * @param string $filePath
+     * 
+     * @return PsrResponseInterface
      */
     protected function handleConcatenation(string $fileName, string $filePath): PsrResponseInterface
     {
@@ -452,6 +457,8 @@ class Server extends AbstractTus
 
     /**
      * Handle PATCH request.
+     * 
+     * @return PsrResponseInterface
      */
     protected function handlePatch(): PsrResponseInterface
     {
@@ -469,12 +476,15 @@ class Server extends AbstractTus
 
         $file = $this->buildFile($meta)->setUploadMetadata($meta['metadata'] ?? []);
         $checksum = $meta['checksum'];
+
         try {
             $request = Context::get(ServerRequestInterface::class);
             $swooleRequest = $request->getSwooleRequest();
             $uploadedContent = $swooleRequest->getContent();
+
             $fileSize = $file->getFileSize();
             $offset = $file->setKey($uploadKey)->setChecksum($checksum)->upload($uploadedContent, $fileSize);
+
             // If upload is done, verify checksum.
             if ($offset === $fileSize) {
                 if (! $this->verifyChecksum($checksum, $meta['file_path'])) {
@@ -512,6 +522,10 @@ class Server extends AbstractTus
 
     /**
      * Verify PATCH request.
+     * 
+     * @param array $meta
+     * 
+     * @return int
      */
     protected function verifyPatchRequest(array $meta): int
     {
@@ -579,6 +593,8 @@ class Server extends AbstractTus
 
     /**
      * Handle DELETE request.
+     * 
+     * @return PsrResponseInterface
      */
     protected function handleDelete(): PsrResponseInterface
     {
@@ -605,6 +621,10 @@ class Server extends AbstractTus
 
     /**
      * Get required headers for head request.
+     * 
+     * @param array $fileMeta
+     * 
+     * @return array
      */
     protected function getHeadersForHeadRequest(array $fileMeta): array
     {
@@ -627,6 +647,10 @@ class Server extends AbstractTus
 
     /**
      * Build file object.
+     * 
+     * @param array $meta
+     * 
+     * @return File
      */
     protected function buildFile(array $meta): File
     {
@@ -641,6 +665,8 @@ class Server extends AbstractTus
 
     /**
      * Get list of supported hash algorithms.
+     * 
+     * @return string
      */
     protected function getSupportedHashAlgorithms(): string
     {
@@ -661,7 +687,7 @@ class Server extends AbstractTus
     /**
      * Verify and get upload checksum from header.
      *
-     * @return PsrResponseInterface|string
+     * @return string|PsrResponseInterface
      */
     protected function getClientChecksum()
     {
@@ -685,7 +711,9 @@ class Server extends AbstractTus
     /**
      * Get expired but incomplete uploads.
      *
-     * @param null|array $contents
+     * @param array|null $contents
+     * 
+     * @return bool
      */
     protected function isExpired($contents): bool
     {
@@ -704,6 +732,10 @@ class Server extends AbstractTus
 
     /**
      * Get path for partial upload.
+     * 
+     * @param string $key
+     * 
+     * @return string
      */
     protected function getPathForPartialUpload(string $key): string
     {
@@ -720,6 +752,10 @@ class Server extends AbstractTus
 
     /**
      * Get metadata of partials.
+     * 
+     * @param array $partials
+     * 
+     * @return array
      */
     protected function getPartialsMeta(array $partials): array
     {
@@ -736,6 +772,8 @@ class Server extends AbstractTus
 
     /**
      * Delete expired resources.
+     * 
+     * @return array
      */
     public function handleExpiration(): array
     {
@@ -765,6 +803,8 @@ class Server extends AbstractTus
 
     /**
      * Verify max upload size.
+     * 
+     * @return bool
      */
     protected function verifyUploadSize(): bool
     {
@@ -779,6 +819,11 @@ class Server extends AbstractTus
 
     /**
      * Verify checksum if available.
+     * 
+     * @param string $checksum
+     * @param string $filePath
+     * 
+     * @return bool
      */
     protected function verifyChecksum(string $checksum, string $filePath): bool
     {
@@ -793,6 +838,9 @@ class Server extends AbstractTus
     /**
      * No other methods are allowed.
      *
+     * @param string $method
+     * @param array  $params
+     * 
      * @return PsrResponseInterface
      */
     public function __call(string $method, array $params)

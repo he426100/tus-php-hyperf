@@ -28,6 +28,8 @@ class Request
 
     /**
      * Get http method from current request.
+     * 
+     * @return string
      */
     public function method(): string
     {
@@ -36,6 +38,8 @@ class Request
 
     /**
      * Get the current path info for the request.
+     * 
+     * @return string
      */
     public function path(): string
     {
@@ -44,6 +48,8 @@ class Request
 
     /**
      * Get upload key from url.
+     * 
+     * @return string
      */
     public function key(): string
     {
@@ -52,6 +58,8 @@ class Request
 
     /**
      * Supported http requests.
+     * 
+     * @return array
      */
     public function allowedHttpVerbs(): array
     {
@@ -68,7 +76,10 @@ class Request
     /**
      * Retrieve a header from the request.
      *
-     * @param null|string|string[] $default
+     * @param string               $key
+     * @param string|string[]|null $default
+     *
+     * @return string|null
      */
     public function header(string $key, $default = null): ?string
     {
@@ -80,6 +91,8 @@ class Request
 
     /**
      * Get the root URL for the request.
+     * 
+     * @return string
      */
     public function url(): string
     {
@@ -88,12 +101,17 @@ class Request
 
     /**
      * Extract metadata from header.
+     *
+     * @param string $key
+     * @param string $value
+     *
+     * @return array
      */
     public function extractFromHeader(string $key, string $value): array
     {
         $meta = $this->header($key);
 
-        if (strpos($meta, $value) !== false) {
+        if (false !== strpos($meta, $value)) {
             $meta = trim(str_replace($value, '', $meta));
 
             return explode(' ', $meta) ?? [];
@@ -104,6 +122,8 @@ class Request
 
     /**
      * Extract base64 encoded filename from header.
+     * 
+     * @return string
      */
     public function extractFileName(): string
     {
@@ -118,6 +138,10 @@ class Request
 
     /**
      * Extracts the metadata from the request header.
+     *
+     * @param string $requestedKey
+     *
+     * @return string
      */
     public function extractMeta(string $requestedKey): string
     {
@@ -173,6 +197,8 @@ class Request
 
     /**
      * Extract partials from header.
+     * 
+     * @return array
      */
     public function extractPartials(): array
     {
@@ -181,22 +207,28 @@ class Request
 
     /**
      * Check if this is a partial upload request.
+     * 
+     * @return bool
      */
     public function isPartial(): bool
     {
-        return $this->header('Upload-Concat') === Server::UPLOAD_TYPE_PARTIAL;
+        return  Server::UPLOAD_TYPE_PARTIAL === $this->header('Upload-Concat');
     }
 
     /**
      * Check if this is a final concatenation request.
+     * 
+     * @return bool
      */
     public function isFinal(): bool
     {
-        return null !== ($header = $this->header('Upload-Concat')) && strpos($header, Server::UPLOAD_TYPE_FINAL . ';') !== false;
+        return null !== ($header = $this->header('Upload-Concat')) && false !== strpos($header, Server::UPLOAD_TYPE_FINAL . ';');
     }
 
     /**
      * Get request.
+     * 
+     * @return HyperfRequest
      */
     public function getRequest(): HyperfRequest
     {
@@ -205,13 +237,17 @@ class Request
 
     /**
      * Validate file name.
+     *
+     * @param string $filename
+     *
+     * @return bool
      */
     protected function isValidFilename(string $filename): bool
     {
         $forbidden = ['../', '"', "'", '&', '/', '\\', '?', '#', ':'];
 
         foreach ($forbidden as $char) {
-            if (strpos($filename, $char) !== false) {
+            if (false !== strpos($filename, $char)) {
                 return false;
             }
         }

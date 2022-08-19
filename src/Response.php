@@ -33,6 +33,10 @@ class Response
 
     /**
      * Set create only.
+     *
+     * @param bool $state
+     *
+     * @return Response
      */
     public function createOnly(bool $state): self
     {
@@ -44,6 +48,8 @@ class Response
     /**
      * Set headers.
      *
+     * @param array $headers
+     * 
      * @return Response
      */
     public function setHeaders(array $headers): self
@@ -56,6 +62,8 @@ class Response
     /**
      * Replace headers.
      *
+     * @param array $headers
+     * 
      * @return Response
      */
     public function replaceHeaders(array $headers): self
@@ -67,6 +75,8 @@ class Response
 
     /**
      * Get global headers.
+     * 
+     * @return array
      */
     public function getHeaders(): array
     {
@@ -75,6 +85,8 @@ class Response
 
     /**
      * Get create only.
+     * 
+     * @return bool
      */
     public function getCreateOnly(): bool
     {
@@ -84,9 +96,11 @@ class Response
     /**
      * Create and send a response.
      *
-     * @param mixed $content response data
-     * @param int $status http status code
-     * @param array $headers headers
+     * @param mixed $content Response data.
+     * @param int   $status  Http status code.
+     * @param array $headers Headers.
+     *
+     * @return PsrResponseInterface
      */
     public function send($content, int $status = HttpResponse::HTTP_OK, array $headers = []): PsrResponseInterface
     {
@@ -108,7 +122,11 @@ class Response
      * Create a new file download response.
      *
      * @param \SplFileInfo|string $file
-     * @param null|string $disposition
+     * @param string|null         $name
+     * @param array               $headers
+     * @param string|null         $disposition
+     *
+     * @return PsrResponseInterface
      */
     public function download(
         $file,
