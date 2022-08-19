@@ -20,6 +20,26 @@ php bin/hyperf.php vendor:publish he426100/tus-php-hyperf
 
 ## 使用示例
 
+* hyperf/app/Controller/TusController.php
+```
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controller;
+
+use Tus\Tus\Server;
+
+class TusController extends AbstractController
+{
+    public function index()
+    {
+        $server = (new Server($this->request, $this->response))->setUploadDir(\dirname(__DIR__, 3) . '/public/' . 'uploads');
+        return $server->serve();
+    }
+}
+```
+
 * nano/index.php
 ```
 <?php
@@ -39,7 +59,8 @@ $app->config([
     ],
 ]);
 
-$app->addRoute(['HEAD', 'GET', 'POST', 'PUT', 'PATCH', 'OPTIONS', 'DELETE'], '/', function(Server $server) {
+$app->addRoute(['HEAD', 'GET', 'POST', 'PUT', 'PATCH', 'OPTIONS', 'DELETE'], '/', function() {
+    $server = new Server($this->request, $this->response);
     return $server->serve();
 });
 
