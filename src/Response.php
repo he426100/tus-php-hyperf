@@ -10,14 +10,14 @@ declare(strict_types=1);
  */
 namespace Tus;
 
-use Hyperf\HttpServer\Response as HyperfResponse;
+use Hyperf\HttpServer\Contract\ResponseInterface;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class Response
 {
-    /** @var HyperfResponse */
+    /** @var ResponseInterface */
     protected $response;
 
     /** @var bool */
@@ -26,7 +26,7 @@ class Response
     /** @var array */
     protected $headers = [];
 
-    public function __construct(HyperfResponse $response)
+    public function __construct(ResponseInterface $response)
     {
         $this->response = $response;
     }

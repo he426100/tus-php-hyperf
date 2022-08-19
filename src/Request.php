@@ -10,18 +10,18 @@ declare(strict_types=1);
  */
 namespace Tus;
 
-use Hyperf\HttpServer\Request as HyperfRequest;
-use Symfony\Component\HttpFoundation\Request as HttpRequest;
 use Tus\Tus\Server;
+use Hyperf\HttpServer\Contract\RequestInterface;
+use Symfony\Component\HttpFoundation\Request as HttpRequest;
 
 class Request
 {
     /**
-     * @var HyperfRequest
+     * @var RequestInterface
      */
     protected $request;
 
-    public function __construct(HyperfRequest $request)
+    public function __construct(RequestInterface $request)
     {
         $this->request = $request;
     }
@@ -228,9 +228,9 @@ class Request
     /**
      * Get request.
      * 
-     * @return HyperfRequest
+     * @return RequestInterface
      */
-    public function getRequest(): HyperfRequest
+    public function getRequest(): RequestInterface
     {
         return $this->request;
     }

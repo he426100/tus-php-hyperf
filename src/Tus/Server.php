@@ -25,6 +25,8 @@ use Tus\Exception\FileException;
 use Tus\Exception\OutOfRangeException;
 use Tus\Middleware\Middleware;
 use Hyperf\Utils\Context;
+use Hyperf\HttpServer\Contract\RequestInterface;
+use Hyperf\HttpServer\Contract\ResponseInterface;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\HttpFoundation\Request as HttpRequest;
@@ -86,15 +88,17 @@ class Server extends AbstractTus
     /**
      * TusServer constructor.
      *
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
      * @param Cacheable|string $cacheAdapter
      *
      * @throws \ReflectionException
      */
-    public function __construct(Request $request, Response $response, Middleware $middleware, string $cacheAdapter = 'file')
+    public function __construct(RequestInterface $request, ResponseInterface $response, string $cacheAdapter = 'file')
     {
-        $this->request = $request;
-        $this->response = $response;
-        $this->middleware = $middleware;
+        $this->request = new Request($request);
+        $this->response = new Response($response);
+        $this->middleware = new Middleware();
         $this->uploadDir = \dirname(__DIR__, 2) . '/' . 'uploads';
         
         $this->setCache($cacheAdapter);
