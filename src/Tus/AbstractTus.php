@@ -55,7 +55,7 @@ abstract class AbstractTus
     public function setCache($cache): self
     {
         if (\is_string($cache)) {
-            $this->cache = CacheFactory::make($cache);
+            $this->cache = make(CacheFactory::class)->make($cache);
         } elseif ($cache instanceof Cacheable) {
             $this->cache = $cache;
         }
