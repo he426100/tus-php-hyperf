@@ -22,6 +22,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\ConnectException;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Hyperf\Guzzle\ClientFactory;
+use function Hyperf\Support\make;
 
 class Client extends AbstractTus
 {

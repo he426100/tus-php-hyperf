@@ -24,7 +24,7 @@ use Tus\Exception\ConnectionException;
 use Tus\Exception\FileException;
 use Tus\Exception\OutOfRangeException;
 use Tus\Middleware\Middleware;
-use Hyperf\Utils\Context;
+use Hyperf\Context\Context;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;

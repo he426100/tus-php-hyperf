@@ -11,7 +11,7 @@ declare(strict_types=1);
 namespace Tus\Commands;
 
 use Hyperf\Contract\ConfigInterface;
-use Hyperf\Utils\ApplicationContext;
+use Hyperf\Context\ApplicationContext;
 use Tus\Tus\Server as TusServer;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;

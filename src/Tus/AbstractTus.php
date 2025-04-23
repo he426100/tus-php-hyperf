@@ -13,6 +13,8 @@ namespace Tus\Tus;
 use Tus\Cache\Cacheable;
 use Tus\Cache\CacheFactory;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use function Hyperf\Support\make;
+
 
 abstract class AbstractTus
 {
