@@ -21,7 +21,7 @@ class HyperfStore extends AbstractCache
     /**
      * HyperfStore constructor.
      *
-     * @param array $options
+     * @param array $cache
      */
     public function __construct(CacheInterface $cache)
     {
@@ -92,7 +92,7 @@ class HyperfStore extends AbstractCache
             $key = $prefix . $key;
         }
 
-        return $this->cache->delete([$key]);
+        return $this->cache->delete($key);
     }
 
     /**
