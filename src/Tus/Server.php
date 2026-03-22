@@ -782,7 +782,7 @@ class Server extends AbstractTus
     public function handleExpiration(): array
     {
         $deleted = [];
-        $cacheKeys = $this->cache->keys('*');
+        $cacheKeys = $this->cache->keys();
 
         foreach ($cacheKeys as $key) {
             $fileMeta = $this->cache->get($key, true);

@@ -11,10 +11,13 @@ declare(strict_types=1);
 namespace Tus\Cache;
 
 use Carbon\Carbon;
+use Hyperf\Cache\Cache;
 use Psr\SimpleCache\CacheInterface;
 
 class HyperfStore extends AbstractCache
 {
+    private const KEY_COLLECTOR_SUFFIX = 'keys';
+
     /** @var CacheInterface */
     protected $cache;
 
@@ -41,11 +44,7 @@ class HyperfStore extends AbstractCache
      */
     public function get(string $key, bool $withExpired = false)
     {
-        $prefix = $this->getPrefix();
-
-        if (strpos($key, $prefix) === false) {
-            $key = $prefix . $key;
-        }
+        $key = $this->formatKey($key);
 
         $contents = $this->cache->get($key);
         if ($contents !== null) {
@@ -70,6 +69,7 @@ class HyperfStore extends AbstractCache
      */
     public function set(string $key, $value)
     {
+        $key = $this->formatKey($key);
         $contents = $this->get($key) ?? [];
 
         if (\is_array($value)) {
@@ -78,7 +78,13 @@ class HyperfStore extends AbstractCache
             $contents[] = $value;
         }
 
-        return $this->cache->set($this->getPrefix() . $key, json_encode($contents));
+        $isStored = $this->cache->set($key, json_encode($contents));
+
+        if ($isStored) {
+            $this->addKey($key);
+        }
+
+        return $isStored;
     }
 
     /**
@@ -86,13 +92,15 @@ class HyperfStore extends AbstractCache
      */
     public function delete(string $key): bool
     {
-        $prefix = $this->getPrefix();
+        $key = $this->formatKey($key);
 
-        if (strpos($key, $prefix) === false) {
-            $key = $prefix . $key;
+        $isDeleted = $this->cache->delete($key);
+
+        if ($isDeleted) {
+            $this->delKey($key);
         }
 
-        return $this->cache->delete($key);
+        return $isDeleted;
     }
 
     /**
@@ -100,6 +108,44 @@ class HyperfStore extends AbstractCache
      */
     public function keys(): array
     {
-        return $this->cache->keys($this->getPrefix() . '*');
+        if (! $this->cache instanceof Cache) {
+            return [];
+        }
+
+        return $this->cache->keys($this->getKeyCollector());
+    }
+
+    private function formatKey(string $key): string
+    {
+        $prefix = $this->getPrefix();
+
+        if (! str_starts_with($key, $prefix)) {
+            return $prefix . $key;
+        }
+
+        return $key;
+    }
+
+    private function getKeyCollector(): string
+    {
+        return $this->getPrefix() . self::KEY_COLLECTOR_SUFFIX;
+    }
+
+    private function addKey(string $key): void
+    {
+        if (! $this->cache instanceof Cache) {
+            return;
+        }
+
+        $this->cache->addKey($this->getKeyCollector(), $key);
+    }
+
+    private function delKey(string $key): void
+    {
+        if (! $this->cache instanceof Cache) {
+            return;
+        }
+
+        $this->cache->delKey($this->getKeyCollector(), $key);
     }
 }
